@@ -36,3 +36,13 @@
   --el-color-danger: #333333;
   --el-color-info: #333333;
 }
+
+.el-loading-spinner .path {
+  stroke: #333333 !important;
+}
+
+.el-loading-spinner .circular,
+.el-loading-spinner i,
+.el-loading-spinner .el-loading-text {
+  color: #333333 !important;
+}

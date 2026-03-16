@@ -122,13 +122,16 @@ const showAnalysis = ref(false)
 const recordId = ref(null)
 
 const dialogTitle = computed(() => {
-  if (isResult.value) return '????'
+  if (taskType.value === 'QUIZ_GEN') {
+    return taskData.value?.title || props.task?.title || '测试卡片'
+  }
+
+  if (isResult.value) return '测试结果'
   switch (taskType.value) {
-    case 'QUIZ_GEN': return '????'
-    case 'GUIDE_GEN': return '????'
-    case 'QUIZ_ANALYSIS': return '????'
-    case 'DIAGNOSIS_GEN': return '????'
-    default: return '????'
+    case 'GUIDE_GEN': return '学习指南'
+    case 'QUIZ_ANALYSIS': return '测试分析'
+    case 'DIAGNOSIS_GEN': return '学习状态分析'
+    default: return '任务详情'
   }
 })
 
@@ -172,15 +175,15 @@ const fetchTaskDetail = async () => {
         request = () => getDiagnosisDetail(props.task.businessId)
         break
       default:
-        ElMessage.error('???????')
+        ElMessage.error('未知的任务类型')
         return
     }
 
     const data = await request()
     taskData.value = data.data
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('??????')
+    console.error('获取任务详情失败:', error)
+    ElMessage.error('获取任务详情失败')
   } finally {
     isLoading.value = false
   }
@@ -221,7 +224,7 @@ const submitQuiz = async () => {
 
   const unanswered = taskData.value.questions.filter(question => !answers.value[question.id])
   if (unanswered.length > 0) {
-    ElMessage.warning('?? ' + unanswered.length + ' ????')
+    ElMessage.warning('还有 ' + unanswered.length + ' 题未作答')
     return
   }
 
@@ -236,8 +239,8 @@ const submitQuiz = async () => {
     isTesting.value = false
     isResult.value = true
   } catch (error) {
-    console.error('????:', error)
-    ElMessage.error('????')
+    console.error('提交测试失败:', error)
+    ElMessage.error('提交失败')
   } finally {
     isLoading.value = false
   }
@@ -258,11 +261,11 @@ const generateAnalysis = async () => {
 
   try {
     await getQuizAnalysis(recordId.value)
-    ElMessage.success('???????????')
+    ElMessage.success('测试分析任务提交成功')
     emit('submitted')
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('????')
+    console.error('生成测试分析失败:', error)
+    ElMessage.error('生成失败')
   }
 }
 </script>

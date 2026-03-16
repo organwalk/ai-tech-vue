@@ -117,7 +117,7 @@ const fetchFileList = async () => {
       emit('update:selectedFileIds', Array.from(currentSelected))
     }
   } catch (error) {
-    console.error('????????:', error)
+    console.error('获取文件列表失败:', error)
   }
 }
 
@@ -153,7 +153,7 @@ const startPolling = () => {
         await fetchFileList()
       }
     } catch (error) {
-      console.error('??????:', error)
+      console.error('轮询解析任务失败:', error)
     }
   }, 3000)
 }
@@ -168,13 +168,13 @@ const handleFileChange = async (event) => {
 
   const ext = getFileExtension(file.name)
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    ElMessage.error('??? txt, md, pdf, doc, docx ?????')
+    ElMessage.error('仅支持 txt、md、pdf、doc、docx 格式文件')
     event.target.value = ''
     return
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    ElMessage.error('???????? 20MB')
+    ElMessage.error('文件大小不能超过 20MB')
     event.target.value = ''
     return
   }
@@ -201,18 +201,18 @@ const uploadFile = async (file) => {
     const putResponse = await uploadFileToStorage(uploadUrl, file, contentType)
 
     if (!putResponse.ok) {
-      throw new Error('????????')
+      throw new Error('上传文件失败')
     }
 
     await confirmFileParse(fileId)
 
-    ElMessage.success('??????????...')
+    ElMessage.success('文件上传成功，正在解析...')
 
     await fetchFileList()
     startPolling()
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('????: ' + error.message)
+    console.error('上传文件失败:', error)
+    ElMessage.error('上传失败: ' + error.message)
   } finally {
     isUploading.value = false
   }
@@ -239,8 +239,8 @@ const handleDeleteFile = async (fileId) => {
 
     await fetchFileList()
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('????')
+    console.error('删除文件失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 

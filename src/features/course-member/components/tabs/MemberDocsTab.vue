@@ -1,7 +1,7 @@
 <template>
   <div class="docs-tab">
     <div class="docs-list">
-      <div v-if="isLoading" class="loading-tip">鍔犺浇涓?..</div>
+      <div v-if="isLoading" class="loading-tip">加载中...</div>
       <template v-else>
         <div 
           v-for="file in fileList" 
@@ -18,11 +18,11 @@
             class="download-btn"
             @click="handleDownload(file.downloadUrl, file.filename)"
           >
-            涓嬭浇
+            下载
           </el-button>
         </div>
         <div v-if="fileList.length === 0" class="empty-tip">
-          鏆傛棤鏂囨。
+          暂无文档
         </div>
       </template>
     </div>

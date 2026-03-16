@@ -165,7 +165,7 @@ const isDisabled = computed(() => {
 
 const handleCardClick = (type) => {
   if (isDisabled.value) {
-    ElMessage.warning('??????')
+    ElMessage.warning('请先选择文档')
     return
   }
   if (type === 'quiz') {
@@ -190,15 +190,15 @@ const formatRelativeTime = (timeStr) => {
   const diffDays = Math.floor(diffHours / 24)
 
   if (diffMins < 1) {
-    return '??'
+    return '刚刚'
   }
   if (diffMins < 60) {
-    return diffMins + '???'
+    return diffMins + '分钟前'
   }
   if (diffHours < 24) {
-    return diffHours + '???'
+    return diffHours + '小时前'
   }
-  return diffDays + '??'
+  return diffDays + '天前'
 }
 
 const handleTaskClick = (task) => {
@@ -217,11 +217,11 @@ const handleTaskSubmitted = () => {
 const handleGenerateDiagnosis = async () => {
   try {
     await startDiagnosis(props.windowId)
-    ElMessage.success('??????????????')
+    ElMessage.success('学情诊断任务已提交')
     emit('start-polling')
   } catch (error) {
-    console.error('????????:', error)
-    ElMessage.error('??????')
+    console.error('生成学情诊断失败:', error)
+    ElMessage.error('生成学情诊断失败')
   }
 }
 
@@ -236,12 +236,12 @@ const handleRenameTask = async () => {
 
   try {
     await updateTaskTitle(currentTask.value.id, newTitle.value)
-    ElMessage.success('?????')
+    ElMessage.success('重命名成功')
     showRenameDialog.value = false
     emit('refresh-tasks')
   } catch (error) {
-    console.error('???????:', error)
-    ElMessage.error('?????')
+    console.error('重命名任务失败:', error)
+    ElMessage.error('重命名失败')
   }
 }
 
@@ -265,17 +265,17 @@ const handleDeleteTask = async (task) => {
       deleteAction = () => deleteLearnerAnalyze(task.businessId)
       break
     default:
-      ElMessage.error('???????')
+      ElMessage.error('未知的任务类型')
       return
   }
 
   try {
     await deleteAction()
-    ElMessage.success('????')
+    ElMessage.success('删除成功')
     emit('refresh-tasks')
   } catch (error) {
-    console.error('??????:', error)
-    ElMessage.error('????')
+    console.error('删除任务失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 </script>

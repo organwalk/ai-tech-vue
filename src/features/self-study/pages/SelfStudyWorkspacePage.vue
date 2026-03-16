@@ -62,7 +62,7 @@ const fetchActiveTasks = async () => {
       pollingTimer = null
     }
   } catch (error) {
-    console.error('??????:', error)
+    console.error('获取任务失败:', error)
   }
 }
 
