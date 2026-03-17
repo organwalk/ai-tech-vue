@@ -2,6 +2,12 @@
 
 基于 Vue 3 + Vite 的 AI 辅助学习平台前端项目，覆盖个人学习与共享课程两种学习模式，支持文档解析、RAG 对话、测验/指南/学情诊断等 AI 学习能力。
 
+## 项目矩阵（AI自适应学习引擎）
+
+- 前端（当前仓库）：[ai-tech-vue](https://github.com/organwalk/ai-tech-vue)
+- 后端：[ai-tech](https://github.com/organwalk/ai-tech)
+- Agent：[ai-tech-agent](https://github.com/organwalk/ai-tech-agent)
+
 ## 项目特性
 
 - 邮箱验证码登录与鉴权路由守卫
