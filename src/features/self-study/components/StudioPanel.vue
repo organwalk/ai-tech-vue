@@ -116,6 +116,12 @@
         <button class="rename-confirm-btn" @click="handleRenameTask">确定</button>
       </template>
     </el-dialog>
+
+    <DeleteConfirmDialog
+      v-model="deleteDialogVisible"
+      :message="deleteMessage"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
@@ -126,6 +132,7 @@ import { Paperclip, Reading, DataAnalysis, DocumentCopy, CircleClose } from '@el
 import QuizGenerateDialog from '@/features/self-study/components/dialogs/QuizGenerateDialog.vue'
 import GuideGenerateDialog from '@/features/self-study/components/dialogs/GuideGenerateDialog.vue'
 import TaskDetailDialog from '@/features/self-study/components/dialogs/TaskDetailDialog.vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import {
   deleteDiagnosis,
   deleteGuide,
@@ -158,6 +165,9 @@ const selectedTask = ref(null)
 const showRenameDialog = ref(false)
 const newTitle = ref('')
 const currentTask = ref(null)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除该任务吗？')
+const deleteTargetId = ref(null)
 
 const isDisabled = computed(() => {
   return !props.selectedFileIds || props.selectedFileIds.length === 0
@@ -245,7 +255,15 @@ const handleRenameTask = async () => {
   }
 }
 
-const handleDeleteTask = async (task) => {
+const handleDeleteTask = (task) => {
+  deleteTargetId.value = task
+  deleteDialogVisible.value = true
+}
+
+const handleConfirmDelete = async () => {
+  const task = deleteTargetId.value
+  if (!task) return
+  
   let deleteAction = null
 
   switch (task.taskType) {
@@ -276,6 +294,8 @@ const handleDeleteTask = async (task) => {
   } catch (error) {
     console.error('删除任务失败:', error)
     ElMessage.error('删除失败')
+  } finally {
+    deleteTargetId.value = null
   }
 }
 </script>
@@ -292,7 +312,7 @@ const handleDeleteTask = async (task) => {
 }
 
 .panel-header {
-  padding: 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #F3F4F6;
 }
 

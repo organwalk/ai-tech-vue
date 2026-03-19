@@ -269,7 +269,7 @@ onUnmounted(() => {
 }
 
 .panel-header {
-  padding: 20px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;

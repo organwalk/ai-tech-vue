@@ -300,7 +300,6 @@ const handleSubmit = async () => {
   background-color: #FFFFFF;
   color: #374151;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
   padding: 8px 24px;
   height: 40px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -315,16 +314,12 @@ const handleSubmit = async () => {
   background-color: #333333;
   color: #FFFFFF;
   border: none;
-  border-radius: 8px;
   padding: 8px 24px;
   height: 40px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.submit-button:hover {
-  background-color: #1f2937;
-  transform: scale(0.98);
-}
+
 
 /* 响应式设计 */
 @media (max-width: 768px) {

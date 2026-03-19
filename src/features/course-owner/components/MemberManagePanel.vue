@@ -149,7 +149,7 @@ onMounted(() => {
 }
 
 .panel-header {
-  padding: 16px;
+  padding: 16px 24px;
   border-bottom: 1px solid #F3F4F6;
 }
 

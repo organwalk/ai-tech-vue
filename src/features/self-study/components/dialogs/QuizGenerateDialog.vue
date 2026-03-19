@@ -14,58 +14,60 @@
     </template>
     
     <div class="dialog-content">
-      <div class="form-section">
-        <div class="section-label">题目数量</div>
-        <div class="option-buttons">
-          <div 
-            v-for="option in countOptions" 
-            :key="option.value"
-            class="option-btn"
-            :class="{ active: count === option.value }"
-            @click="count = option.value"
-          >
-            {{ option.label }}
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-position="top"
+        class="quiz-form"
+        hide-required-asterisk
+      >
+        <el-form-item label="题目数量" prop="count">
+          <div class="option-buttons">
+            <div 
+              v-for="option in countOptions" 
+              :key="option.value"
+              class="option-btn"
+              :class="{ active: formData.count === option.value }"
+              @click="formData.count = option.value"
+            >
+              {{ option.label }}
+            </div>
           </div>
-        </div>
-      </div>
+        </el-form-item>
 
-      <div class="form-section">
-        <div class="section-label">难度等级</div>
-        <div class="option-buttons">
-          <div 
-            v-for="option in difficultyOptions" 
-            :key="option.value"
-            class="option-btn"
-            :class="{ active: difficulty === option.value }"
-            @click="difficulty = option.value"
-          >
-           {{ option.label }}
+        <el-form-item label="难度等级" prop="difficulty">
+          <div class="option-buttons">
+            <div 
+              v-for="option in difficultyOptions" 
+              :key="option.value"
+              class="option-btn"
+              :class="{ active: formData.difficulty === option.value }"
+              @click="formData.difficulty = option.value"
+            >
+             {{ option.label }}
+            </div>
           </div>
-        </div>
-      </div>
+        </el-form-item>
 
-      <div class="form-section">
-        <div class="section-label">标题</div>
-        <input 
-          v-model="title" 
-          class="title-input"
-          placeholder="请输入标题"
-          maxlength="20"
-        />
-      </div>
+        <el-form-item label="标题" prop="title">
+          <input 
+            v-model="formData.title" 
+            class="title-input"
+            placeholder="请输入标题"
+            maxlength="20"
+          />
+        </el-form-item>
 
-      <div class="form-section">
-        <div class="section-label">主题（可选）</div>
-        <textarea 
-          v-model="prompt" 
-          class="theme-input"
-          placeholder="示例提示
- • 仅限于特定来源
- • 专注特定主题
- • 简短易记"
-          rows="4"
-        ></textarea>
-      </div>
+        <el-form-item label="主题（可选）" prop="prompt">
+          <textarea 
+            v-model="formData.prompt" 
+            class="theme-input"
+            placeholder="示例提示\n • 仅限于特定来源\n • 专注特定主题\n • 简短易记"
+            rows="4"
+          ></textarea>
+        </el-form-item>
+      </el-form>
     </div>
 
     <template #footer>
@@ -102,10 +104,13 @@ const emit = defineEmits(['update:modelValue', 'submitted'])
 
 const dialogVisible = ref(props.modelValue)
 const isLoading = ref(false)
-const title = ref('')
-const count = ref(10)
-const difficulty = ref('SAME')
-const prompt = ref('')
+const formRef = ref(null)
+const formData = ref({
+  title: '',
+  count: 10,
+  difficulty: 'SAME',
+  prompt: ''
+})
 
 const countOptions = [
   { label: '5', value: 5 },
@@ -119,6 +124,13 @@ const difficultyOptions = [
   { label: '困难', value: 'HIGHER' }
 ]
 
+const rules = {
+  title: [
+    { required: true, message: '请输入标题', trigger: 'blur' },
+    { min: 1, max: 20, message: '标题长度不能超过20个字符', trigger: 'blur' }
+  ]
+}
+
 watch(() => props.modelValue, (val) => {
   dialogVisible.value = val
 })
@@ -128,18 +140,20 @@ watch(dialogVisible, (val) => {
 })
 
 const handleGenerate = async () => {
-  isLoading.value = true
-  
   try {
+    await formRef.value.validate()
+    
+    isLoading.value = true
+    
     const payload = {
       windowId: props.windowId,
-      title: title.value,
+      title: formData.value.title,
       mode: 'SELF_STUDY',
       config: {
-        prompt: prompt.value,
+        prompt: formData.value.prompt,
         focus: 'ALL',
-        count: count.value,
-        difficulty: difficulty.value,
+        count: formData.value.count,
+        difficulty: formData.value.difficulty,
         fileIds: props.selectedFileIds
       }
     }
@@ -149,7 +163,10 @@ const handleGenerate = async () => {
     ElMessage.success('测验生成任务已提交')
     emit('submitted')
   } catch (error) {
-    console.error('生成测验失败:', error)
+    if (error !== false) {
+      console.error('生成测验失败:', error)
+      ElMessage.error('生成失败，请重试')
+    }
   } finally {
     isLoading.value = false
   }

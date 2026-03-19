@@ -13,25 +13,32 @@
     </template>
 
     <div class="dialog-content">
-      <div class="form-section">
-        <div class="section-label">标题</div>
-        <input
-          v-model="title"
-          class="title-input"
-          placeholder="请输入标题"
-          maxlength="20"
-        />
-      </div>
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="rules"
+        label-position="top"
+        class="guide-form"
+        hide-required-asterisk
+      >
+        <el-form-item label="标题" prop="title">
+          <input
+            v-model="formData.title"
+            class="title-input"
+            placeholder="请输入标题"
+            maxlength="20"
+          />
+        </el-form-item>
 
-      <div class="form-section">
-        <div class="section-label">主题应该是什么？</div>
-        <textarea
-          v-model="topic"
-          class="topic-input"
-          placeholder="请描述需要生成的主题"
-          rows="7"
-        ></textarea>
-      </div>
+        <el-form-item label="主题应该是什么？" prop="topic">
+          <textarea
+            v-model="formData.topic"
+            class="topic-input"
+            placeholder="请描述需要生成的主题"
+            rows="7"
+          ></textarea>
+        </el-form-item>
+      </el-form>
     </div>
 
     <template #footer>
@@ -48,6 +55,7 @@
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { generateGuide, getFileList } from '@/shared/api/index.js'
+import { debounce } from '@/shared/utils/debounce.js'
 
 const props = defineProps({
   modelValue: {
@@ -68,13 +76,32 @@ const emit = defineEmits(['update:modelValue', 'submitted'])
 
 const dialogVisible = ref(props.modelValue)
 const isLoading = ref(false)
-const title = ref('')
-const topic = ref('')
+const formRef = ref(null)
+const formData = ref({
+  title: '',
+  topic: ''
+})
 const chapterFileIds = ref([])
 
+const rules = {
+  title: [
+    { required: true, message: '请输入标题', trigger: 'blur' },
+    { min: 1, max: 20, message: '标题长度不能超过20个字符', trigger: 'blur' }
+  ],
+  topic: [
+    { required: true, message: '请描述需要生成的主题', trigger: 'blur' }
+  ]
+}
+
+const handleTopicInput = debounce((value) => {
+  formData.value.topic = value
+}, 300)
+
 const resetForm = () => {
-  title.value = ''
-  topic.value = ''
+  formData.value = {
+    title: '',
+    topic: ''
+  }
 }
 
 watch(() => props.modelValue, (val) => {
@@ -111,14 +138,16 @@ const fetchChapterFiles = async () => {
 }
 
 const handleGenerate = async () => {
-  isLoading.value = true
-
   try {
+    await formRef.value.validate()
+    
+    isLoading.value = true
+
     await generateGuide({
       windowId: props.windowId,
       chapterId: props.chapterId,
-      title: title.value,
-      topic: topic.value,
+      title: formData.value.title,
+      topic: formData.value.topic,
       fileIds: chapterFileIds.value
     })
 
@@ -127,8 +156,10 @@ const handleGenerate = async () => {
     ElMessage.success('学习指南生成任务已提交')
     emit('submitted')
   } catch (error) {
-    console.error('生成学习指南失败:', error)
-    ElMessage.error('生成失败，请重试')
+    if (error !== false) {
+      console.error('生成学习指南失败:', error)
+      ElMessage.error('生成失败，请重试')
+    }
   } finally {
     isLoading.value = false
   }

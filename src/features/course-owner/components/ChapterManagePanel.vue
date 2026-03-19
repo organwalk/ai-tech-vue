@@ -113,18 +113,25 @@
       :window-id="windowId"
       @success="handleFormSuccess"
     />
+
+    <DeleteConfirmDialog
+      v-model="deleteDialogVisible"
+      :message="deleteMessage"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import ChapterFormDialog from '@/features/course-owner/components/dialogs/ChapterFormDialog.vue'
 import ChapterFileManager from '@/features/course-owner/components/ChapterFileManager.vue'
 import ChapterQuizManager from '@/features/course-owner/components/ChapterQuizManager.vue'
 import ChapterFeedbackManager from '@/features/course-owner/components/ChapterFeedbackManager.vue'
 import ChapterGuideManager from '@/features/course-owner/components/ChapterGuideManager.vue'
 import MemberManagePanel from '@/features/course-owner/components/MemberManagePanel.vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import { getChapterList, deleteChapter } from '@/shared/api/index.js'
 
 const props = defineProps({
@@ -145,6 +152,9 @@ const chapterList = ref([])
 const isLoading = ref(false)
 const showFormDialog = ref(false)
 const selectedChapter = ref(null)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除该章节吗？')
+const deleteTargetId = ref(null)
 
 const fetchChapterList = async () => {
   isLoading.value = true
@@ -191,42 +201,29 @@ const handleEditChapterInDetail = () => {
   showFormDialog.value = true
 }
 
-const handleDeleteChapterInDetail = async () => {
+const handleDeleteChapterInDetail = () => {
   if (!selectedChapter.value) return
+  deleteTargetId.value = selectedChapter.value.id
+  deleteDialogVisible.value = true
+}
+
+const handleDeleteChapter = (chapterId) => {
+  deleteTargetId.value = chapterId
+  deleteDialogVisible.value = true
+}
+
+const handleConfirmDelete = async () => {
+  if (!deleteTargetId.value) return
   
   try {
-    await ElMessageBox.confirm('确定要删除该章节吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    await deleteChapter(selectedChapter.value.id)
+    await deleteChapter(deleteTargetId.value)
     ElMessage.success('删除成功')
     handleBackToList()
     fetchChapterList()
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除章节失败:', error)
-    }
-  }
-}
-
-const handleDeleteChapter = async (chapterId) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该章节吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    await deleteChapter(chapterId)
-    ElMessage.success('删除成功')
-    fetchChapterList()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除章节失败:', error)
-    }
+    console.error('删除章节失败:', error)
+  } finally {
+    deleteTargetId.value = null
   }
 }
 

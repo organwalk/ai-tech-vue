@@ -81,10 +81,13 @@ const formatTime = (timeString) => {
 
 // 处理操作
 const handleAction = (command) => {
-  if (command === 'edit') {
-    emit('edit', props.data)
-  } else if (command === 'delete') {
-    emit('delete', String(props.data.id))
+  switch (command) {
+    case 'edit':
+      emit('edit', props.data)
+      break
+    case 'delete':
+      emit('delete', String(props.data.id))
+      break
   }
 }
 

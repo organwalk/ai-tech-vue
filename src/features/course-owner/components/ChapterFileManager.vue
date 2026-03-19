@@ -54,12 +54,19 @@
       </template>
     </div>
   </div>
+
+  <DeleteConfirmDialog
+    v-model="deleteDialogVisible"
+    :message="deleteMessage"
+    @confirm="handleConfirmDelete"
+  />
 </template>
 
 <script setup>
 import { onUnmounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Document } from '@element-plus/icons-vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import {
   confirmFileParse,
   deleteFile,
@@ -86,6 +93,9 @@ const fileInput = ref(null)
 const fileList = ref([])
 const isUploading = ref(false)
 const isLoading = ref(false)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除该文件吗？')
+const deleteTargetId = ref(null)
 let pollingTimer = null
 
 const ALLOWED_EXTENSIONS = ['.txt', '.md', '.pdf', '.doc', '.docx']
@@ -257,14 +267,24 @@ const uploadFile = async (file) => {
   }
 }
 
-const handleDeleteFile = async (fileId) => {
+const handleDeleteFile = (fileId) => {
+  deleteTargetId.value = fileId
+  deleteDialogVisible.value = true
+}
+
+const handleConfirmDelete = async () => {
+  if (!deleteTargetId.value) return
+  
   try {
-    await deleteFile(fileId)
+    await deleteFile(deleteTargetId.value)
     await fetchFileList(false)
     emitFilesUpdated()
+    ElMessage.success('删除成功')
   } catch (error) {
     console.error('删除文件失败:', error)
     ElMessage.error('删除文件失败')
+  } finally {
+    deleteTargetId.value = null
   }
 }
 
@@ -293,7 +313,7 @@ onUnmounted(() => {
 }
 
 .panel-header {
-  padding: 16px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;

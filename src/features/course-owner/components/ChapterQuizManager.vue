@@ -93,15 +93,22 @@
       v-model="showPreviewDialog"
       :task="selectedQuiz"
     />
+
+    <DeleteConfirmDialog
+      v-model="deleteDialogVisible"
+      :message="deleteMessage"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { DocumentCopy, CircleClose, Loading } from '@element-plus/icons-vue'
 import ChapterQuizDialog from '@/features/course-owner/components/dialogs/ChapterQuizDialog.vue'
 import QuizPreviewDialog from '@/features/course-owner/components/dialogs/QuizPreviewDialog.vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import { getActiveTasks, updateTaskTitle, deleteQuiz } from '@/shared/api/index.js'
 import { getUserInfo } from '@/shared/api/utils/helpers.js'
 
@@ -125,6 +132,9 @@ const showPreviewDialog = ref(false)
 const currentQuiz = ref(null)
 const newTitle = ref('')
 const selectedQuiz = ref(null)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除该试题吗？')
+const deleteTargetId = ref(null)
 let pollingTimer = null
 
 const getOwnerId = () => {
@@ -215,21 +225,22 @@ const handleRenameConfirm = async () => {
   }
 }
 
-const handleDeleteQuiz = async (quizId) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该试题吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
+const handleDeleteQuiz = (quizId) => {
+  deleteTargetId.value = quizId
+  deleteDialogVisible.value = true
+}
 
-    await deleteQuiz(quizId)
+const handleConfirmDelete = async () => {
+  if (!deleteTargetId.value) return
+  
+  try {
+    await deleteQuiz(deleteTargetId.value)
     ElMessage.success('删除成功')
     fetchQuizList()
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除试题失败:', error)
-    }
+    console.error('删除试题失败:', error)
+  } finally {
+    deleteTargetId.value = null
   }
 }
 
@@ -259,7 +270,7 @@ onUnmounted(() => {
 }
 
 .panel-header {
-  padding: 16px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;

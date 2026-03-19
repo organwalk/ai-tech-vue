@@ -2,30 +2,31 @@
   <el-dialog
     v-model="dialogVisible"
     title="修改个人信息"
-    width="30%"
+    width="50%"
     style="overflow-y:auto;max-height: 90vh; border-radius: 20px; padding: 35px;"
     :show-close="false"
     custom-class="user-info-dialog"
     append-to-body
   >
+  <br/>
     <el-form
       ref="formRef"
       :model="form"
       :rules="rules"
+      label-position="top"
       class="nickname-form"
       hide-required-asterisk
     >
-        <el-form-item prop="nickname">
-          <el-input
-            v-model="form.nickname"
-            placeholder="请输入新昵称"
-            maxlength="20"
-            show-word-limit
-            class="nickname-input"
-          ></el-input>
-        </el-form-item>
-      </el-form>
- 
+      <el-form-item label="昵称" prop="nickname">
+        <el-input
+          v-model="form.nickname"
+          placeholder="请输入新昵称"
+          maxlength="20"
+          show-word-limit
+          class="nickname-input"
+        ></el-input>
+      </el-form-item>
+    </el-form>
 
     <template #footer>
       <span class="dialog-footer">
@@ -147,9 +148,10 @@ const handleSubmit = async () => {
 }
 
 .nickname-form :deep(.el-form-item__label) {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #4b5563;
+  color: #374151;
+  margin-bottom: 8px;
 }
 
 .nickname-input {
@@ -162,7 +164,6 @@ const handleSubmit = async () => {
 
 .nickname-input :deep(.el-input__inner) {
   height: 44px;
-  text-align: center;
 }
 
 .nickname-input :deep(.el-input__inner::placeholder) {
@@ -171,19 +172,11 @@ const handleSubmit = async () => {
 
 .dialog-footer {
   display: flex;
-  justify-content: center;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
-.cancel-button {
-  background-color: #FFFFFF;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 8px 24px;
-  height: 40px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+
 
 .cancel-button:hover {
   background-color: #f9fafb;
@@ -194,21 +187,8 @@ const handleSubmit = async () => {
   background-color: #333333;
   color: #FFFFFF;
   border: none;
-  border-radius: 8px;
   padding: 8px 24px;
   height: 40px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.submit-button:hover {
-  background-color: #1f2937;
-  transform: scale(0.98);
-}
-
-@media (max-width: 480px) {
-  :deep(.el-dialog) {
-    width: 90% !important;
-    margin: 5vh auto !important;
-  }
 }
 </style>

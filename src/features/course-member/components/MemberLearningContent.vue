@@ -119,7 +119,7 @@ const handleFileIdsChange = (fileIds) => {
 }
 
 .panel-header {
-  padding: 16px;
+  padding: 16px 24px;
   background-color: #FFFFFF;
   border-bottom: 1px solid #E5E7EB;
   flex-shrink: 0;

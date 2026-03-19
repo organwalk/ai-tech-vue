@@ -93,15 +93,22 @@
       v-model="showPreviewDialog"
       :guide-id="selectedGuideId"
     />
+
+    <DeleteConfirmDialog
+      v-model="deleteDialogVisible"
+      :message="deleteMessage"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Reading, CircleClose, Loading } from '@element-plus/icons-vue'
 import ChapterGuideDialog from '@/features/course-owner/components/dialogs/ChapterGuideDialog.vue'
 import GuidePreviewDialog from '@/features/course-owner/components/dialogs/GuidePreviewDialog.vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import { getActiveTasks, updateTaskTitle, deleteGuide } from '@/shared/api/index.js'
 import { getUserInfo } from '@/shared/api/utils/helpers.js'
 
@@ -125,6 +132,9 @@ const showPreviewDialog = ref(false)
 const currentGuide = ref(null)
 const newTitle = ref('')
 const selectedGuideId = ref(null)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除该指南吗？')
+const deleteTargetId = ref(null)
 let pollingTimer = null
 
 const getOwnerId = () => {
@@ -215,21 +225,22 @@ const handleRenameConfirm = async () => {
   }
 }
 
-const handleDeleteGuide = async (guideId) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该指南吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
+const handleDeleteGuide = (guideId) => {
+  deleteTargetId.value = guideId
+  deleteDialogVisible.value = true
+}
 
-    await deleteGuide(guideId)
+const handleConfirmDelete = async () => {
+  if (!deleteTargetId.value) return
+  
+  try {
+    await deleteGuide(deleteTargetId.value)
     ElMessage.success('删除成功')
     fetchGuideList()
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除指南失败:', error)
-    }
+    console.error('删除指南失败:', error)
+  } finally {
+    deleteTargetId.value = null
   }
 }
 
@@ -259,7 +270,7 @@ onUnmounted(() => {
 }
 
 .panel-header {
-  padding: 16px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;

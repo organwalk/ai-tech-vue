@@ -8,18 +8,23 @@
     style="overflow-y:auto;max-height: 90vh; border-radius: 15px; padding: 35px;"
     class="chapter-form-dialog"
   >
-    <div class="form-content">
-      <div class="form-item">
-        <label class="form-label">标题 <span class="required">*</span></label>
+    <el-form
+      ref="formRef"
+      :model="formData"
+      :rules="rules"
+      label-position="top"
+      class="chapter-form"
+      hide-required-asterisk
+    >
+      <el-form-item label="标题" prop="title">
         <el-input
           v-model="formData.title"
           placeholder="请输入章节标题"
           maxlength="20"
           show-word-limit
         />
-      </div>
-      <div class="form-item">
-        <label class="form-label">摘要</label>
+      </el-form-item>
+      <el-form-item label="摘要" prop="contentSummary">
         <el-input
           v-model="formData.contentSummary"
           type="textarea"
@@ -28,12 +33,14 @@
           show-word-limit
           :rows="3"
         />
-      </div>
-    </div>
+      </el-form-item>
+    </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <button class="cancel-btn" @click="handleCancel">取消</button>
-        <button class="confirm-btn" @click="handleConfirm">确定</button>
+        <button class="cancel-btn" @click="handleCancel" :disabled="loading">取消</button>
+        <button class="confirm-btn" @click="handleConfirm" :disabled="loading">
+          {{ loading ? '处理中...' : '确定' }}
+        </button>
       </div>
     </template>
   </el-dialog>
@@ -73,6 +80,16 @@ const formData = ref({
   contentSummary: ''
 })
 
+const rules = {
+  title: [
+    { required: true, message: '请输入章节标题', trigger: 'blur' },
+    { min: 1, max: 20, message: '标题长度不能超过20个字符', trigger: 'blur' }
+  ]
+}
+
+const formRef = ref(null)
+const loading = ref(false)
+
 watch(() => props.modelValue, (val) => {
   if (val) {
     if (props.chapter) {
@@ -94,12 +111,11 @@ const handleCancel = () => {
 }
 
 const handleConfirm = async () => {
-  if (!formData.value.title.trim()) {
-    ElMessage.warning('请输入章节标题')
-    return
-  }
-
   try {
+    await formRef.value.validate()
+    
+    loading.value = true
+    
     if (isEdit.value) {
       await updateChapter({
         id: props.chapter.id,
@@ -115,8 +131,13 @@ const handleConfirm = async () => {
     }
     ElMessage.success(isEdit.value ? '修改成功' : '创建成功')
     emit('success')
+    dialogVisible.value = false
   } catch (error) {
-    console.error(isEdit.value ? '修改章节失败:' : '创建章节失败:', error)
+    if (error !== false) {
+      console.error(isEdit.value ? '修改章节失败:' : '创建章节失败:', error)
+    }
+  } finally {
+    loading.value = false
   }
 }
 </script>

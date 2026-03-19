@@ -10,6 +10,7 @@
     <el-form
       ref="formRef"
       :model="form"
+      :rules="rules"
       label-position="top"
       class="join-form"
       hide-required-asterisk
@@ -81,6 +82,13 @@ const form = reactive({
   inviteCode: ''
 })
 
+const rules = {
+  inviteCode: [
+    { required: true, message: '请输入邀请码', trigger: 'blur' },
+    { min: 1, max: 20, message: '邀请码长度不能超过20个字符', trigger: 'blur' }
+  ]
+}
+
 const formRef = ref(null)
 const loading = ref(false)
 
@@ -94,23 +102,20 @@ const handleCancel = () => {
 }
 
 const handleSubmit = async () => {
-  const inviteCode = form.inviteCode.trim()
-  
-  if (!inviteCode) {
-    ElMessage.warning('请输入邀请码')
-    return
-  }
-
-  loading.value = true
-
   try {
-    await joinWindow(inviteCode)
+    await formRef.value.validate()
+    
+    loading.value = true
+
+    await joinWindow(form.inviteCode)
     ElMessage.success('成功加入窗口')
     dialogVisible.value = false
     form.inviteCode = ''
     emit('success')
   } catch (error) {
-    console.error('加入窗口失败:', error)
+    if (error !== false) {
+      console.error('加入窗口失败:', error)
+    }
   } finally {
     loading.value = false
   }

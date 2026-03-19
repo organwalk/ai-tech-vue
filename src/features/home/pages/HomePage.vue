@@ -75,6 +75,13 @@
       :window-data="currentWindow"
       @success="handleUpdateSuccess"
     />
+
+    <!-- 删除确认弹窗 -->
+    <DeleteConfirmDialog
+      v-model:visible="deleteDialogVisible"
+      :message="deleteMessage"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
@@ -87,8 +94,9 @@ import CustomPagination from '@/features/home/components/CustomPagination.vue'
 import CreateWindowDialog from '@/features/home/components/dialogs/CreateWindowDialog.vue'
 import JoinWindowDialog from '@/features/home/components/dialogs/JoinWindowDialog.vue'
 import UpdateWindowDialog from '@/features/home/components/dialogs/UpdateWindowDialog.vue'
+import DeleteConfirmDialog from '@/shared/components/dialogs/DeleteConfirmDialog.vue'
 import { getWindowList, createWindow, updateWindow, deleteWindow } from '@/shared/api/index.js'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
@@ -97,6 +105,9 @@ const sortBy = ref('recent')
 const createDialogVisible = ref(false)
 const joinDialogVisible = ref(false)
 const updateDialogVisible = ref(false)
+const deleteDialogVisible = ref(false)
+const deleteMessage = ref('确定要删除这个窗口吗？')
+const deleteTargetId = ref(null)
 const currentWindow = ref(null)
 const windows = ref([])
 const loading = ref(false)
@@ -106,21 +117,25 @@ const total = ref(0)
 
 // 根据标签筛选窗口
 const filteredWindows = computed(() => {
-  let result = [...windows.value]
+  const result = [...windows.value]
   
-  // 排序
-  result.sort((a, b) => {
-    if (sortBy.value === 'recent') {
-      return new Date(b.createTime) - new Date(a.createTime)
-    } else if (sortBy.value === 'name') {
-      return a.title.localeCompare(b.title)
-    } else if (sortBy.value === 'type') {
-      return a.type.localeCompare(b.type)
-    }
-    return 0
-  })
+  // 根据排序方式选择比较函数
+  let compareFn
+  switch (sortBy.value) {
+    case 'recent':
+      compareFn = (a, b) => new Date(b.createTime) - new Date(a.createTime)
+      break
+    case 'name':
+      compareFn = (a, b) => a.title.localeCompare(b.title)
+      break
+    case 'type':
+      compareFn = (a, b) => a.type.localeCompare(b.type)
+      break
+    default:
+      compareFn = () => 0
+  }
   
-  return result
+  return result.sort(compareFn)
 })
 
 // 组件挂载时获取窗口列表
@@ -166,37 +181,40 @@ const handleEdit = (window) => {
 
 // 处理删除窗口
 const handleDelete = (id) => {
-  ElMessageBox.confirm('确定要删除这个窗口吗？', '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    try {
-      await deleteWindow(id)
-      ElMessage.success('删除成功')
-      // 重新获取窗口列表
-      await fetchWindows()
-    } catch (error) {
-      console.error('删除窗口失败:', error)
-      ElMessage.error('删除窗口失败，请稍后重试')
-    }
-  }).catch(() => {
-    // 取消删除
-  })
+  deleteTargetId.value = id
+  deleteDialogVisible.value = true
+}
+
+// 确认删除
+const handleConfirmDelete = async () => {
+  if (!deleteTargetId.value) return
+  
+  try {
+    await deleteWindow(deleteTargetId.value)
+    ElMessage.success('删除成功')
+    await fetchWindows()
+  } catch (error) {
+    console.error('删除窗口失败:', error)
+    ElMessage.error('删除窗口失败，请稍后重试')
+  } finally {
+    deleteTargetId.value = null
+  }
 }
 
 // 处理点击卡片跳转
 const handleClick = (window) => {
-  if (window.type === 'COURSE') {
-    if (window.role === 'OWNER') {
-      const inviteCode = window.inviteCode || 'default'
-      router.push(`/ai-tech/share/owner/window/${window.id}/${inviteCode}`)
-    } else {
-      const inviteCode = window.inviteCode || 'default'
-      router.push(`/ai-tech/share/member/window/${window.id}/${inviteCode}`)
-    }
-  } else {
-    router.push(`/ai-tech/self/window/${window.id}`)
+  const inviteCode = window.inviteCode || 'default'
+  switch (window.type) {
+    case 'COURSE':
+      if (window.role === 'OWNER') {
+        router.push(`/ai-tech/share/owner/window/${window.id}/${inviteCode}`)
+      } else {
+        router.push(`/ai-tech/share/member/window/${window.id}/${inviteCode}`)
+      }
+      break
+    default:
+      router.push(`/ai-tech/self/window/${window.id}`)
+      break
   }
 }
 
